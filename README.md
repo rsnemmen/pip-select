@@ -1,6 +1,6 @@
 # `pip-select`: Interactive command-line tool for upgrading pip-installed packages
 
-An interactive, user-friendly tool for upgrading pip-installed packages while smartly excluding conda-installed ones. No more accidental upgrades of your carefully managed conda packages!
+An interactive, user-friendly tool for upgrading pip-installed packages while smartly excluding conda-installed ones. No more accidental upgrades of your carefully managed conda packages.
 
 ## Installation
 
@@ -50,7 +50,7 @@ Enter numbers to upgrade (e.g. 1 3 4), or blank to cancel:
 
 ### Interactive Mode (Curses UI)
 
-Launch the beautiful interactive menu:
+Launch the interactive menu:
 
 ```bash
 ./pip-select.py
@@ -70,7 +70,7 @@ SPACE=toggle  ↑/↓/PgUp/PgDn=move  Home/End=jump  a=all  n=none  Enter=upg  q
 [ ] requests                        2.28.0       -> 2.31.0      
 ```
 
-Navigate with arrow keys, toggle with spacebar, and press Enter to upgrade selected packages!
+Navigate with arrow keys, toggle with spacebar, and press Enter to upgrade selected packages.
 
 ### User Mode Installation
 
@@ -115,7 +115,7 @@ When in the interactive curses mode:
 - **Python**: 3.8 or higher
 - **OS**: Linux or macOS (uses curses for the interactive UI)
 - **pip**: Any recent version
-- **Conda**: Optional (tool works great with or without it!)
+- **Conda**: Optional (tool works great with or without it)
 
 ## Command Line Options
 
@@ -201,7 +201,7 @@ python pip-select.py --help
 
 ## License
 
-This project is open source. Feel free to use, modify, and share!
+This project is open source. Feel free to use, modify, and share.
 
 ---
 
