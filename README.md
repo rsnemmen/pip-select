@@ -1,26 +1,26 @@
-# pip-select-upgrade 🐍
+# pip-select-upgrade
 
 An interactive, user-friendly tool for upgrading pip-installed packages while smartly excluding conda-installed ones. No more accidental upgrades of your carefully managed conda packages!
 
-## ✨ Features
+## Features
 
-- **🧠 Smart Conda Detection**: Automatically detects and excludes packages installed via conda
-- **📊 Visual Progress Bar**: See exactly what's happening with a tqdm-style progress indicator
-- **🎯 Interactive Selection**: Multi-select menu with spacebar toggle (vim-style keybindings included!)
-- **🖥️ Curses UI**: Beautiful terminal interface with keyboard navigation
-- **📝 Text Fallback**: Works even without curses support
-- **🔒 Safe Dry-Run**: Preview upgrades before committing
-- **📦 Zero Dependencies**: Uses only Python standard library
-- **🏠 User Mode Support**: Install to user site-packages when you don't have admin rights
+- **Smart Conda Detection**: Automatically detects and excludes packages installed via conda
+- **Visual Progress Bar**: See exactly what's happening with a tqdm-style progress indicator
+- **Interactive Selection**: Multi-select menu with spacebar toggle (vim-style keybindings included!)
+- **Curses UI**: Beautiful terminal interface with keyboard navigation
+- **Text Fallback**: Works even without curses support
+- **Safe Dry-Run**: Preview upgrades before committing
+- **Zero Dependencies**: Uses only Python standard library
+- **User Mode Support**: Install to user site-packages when you don't have admin rights
 
-## 📋 Requirements
+## Requirements
 
 - **Python**: 3.8 or higher
 - **OS**: Linux or macOS (uses curses for the interactive UI)
 - **pip**: Any recent version
 - **Conda**: Optional (tool works great with or without it!)
 
-## 🚀 Installation
+## Installation
 
 Simply download the script and make it executable:
 
@@ -41,7 +41,7 @@ Or run it directly without installing:
 python pip_select_upgrade.py
 ```
 
-## 🎮 Usage
+## Usage
 
 ### Quick Start (Dry Run)
 
@@ -68,7 +68,7 @@ Upgradeable packages:
 Enter numbers to upgrade (e.g. 1 3 4), or blank to cancel: 
 ```
 
-### Interactive Mode (Curses UI) 🎨
+### Interactive Mode (Curses UI)
 
 Launch the beautiful interactive menu:
 
@@ -91,7 +91,7 @@ SPACE=toggle  ↑/↓/PgUp/PgDn=move  Home/End=jump  a=all  n=none  Enter=upg  q
 
 Navigate with arrow keys, toggle with spacebar, and press Enter to upgrade selected packages!
 
-### User Mode Installation 👤
+### User Mode Installation
 
 If you don't have admin rights, use the `--user` flag:
 
@@ -101,7 +101,7 @@ python pip_select_upgrade.py --user
 
 This will install upgrades to your user site-packages directory.
 
-## ⌨️ Keyboard Shortcuts
+## Keyboard Shortcuts
 
 When in the interactive curses mode:
 
@@ -118,7 +118,7 @@ When in the interactive curses mode:
 | `Enter` | Upgrade selected packages |
 | `q` | Quit without upgrading |
 
-## 🛠️ Command Line Options
+## Command Line Options
 
 ```
 usage: pip_select_upgrade.py [-h] [--user] [--dry-run] [--no-curses] ...
@@ -137,7 +137,7 @@ options:
   --no-curses  Disable curses UI (use text fallback selection).
 ```
 
-## 🔍 How It Works
+## How It Works
 
 The tool uses two clever methods to detect conda-installed packages:
 
@@ -146,7 +146,7 @@ The tool uses two clever methods to detect conda-installed packages:
 
 This dual approach ensures conda packages are reliably excluded from the upgrade list, even in mixed environments.
 
-## 📝 Additional Examples
+## Additional Examples
 
 ### Using with Constraints File
 
@@ -180,7 +180,7 @@ View all available options:
 python pip_select_upgrade.py --help
 ```
 
-## 💡 Tips & Notes
+## Tips & Notes
 
 - **Virtual Environments**: Works great in venv, virtualenv, and conda envs
 - **No Curses?**: Use `--no-curses` for a simple text-based interface
@@ -189,7 +189,7 @@ python pip_select_upgrade.py --help
 - **Windows**: Sorry, this tool is Linux/macOS only due to curses dependency
 - **Dependency Free**: No pip-review or other tools needed - uses pip directly!
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 **"--user cannot be used inside a virtual environment"**
 → Omit the `--user` flag when running inside a venv
@@ -200,10 +200,10 @@ python pip_select_upgrade.py --help
 **Progress bar freezes**
 → This is normal! The bar is time-based. pip is still working in the background checking PyPI.
 
-## 📄 License
+## License
 
 This project is open source. Feel free to use, modify, and share!
 
 ---
 
-**Happy upgrading!** 🎉
+**Happy upgrading!**
