@@ -23,6 +23,8 @@ import os
 import re
 import subprocess
 import sys
+import threading
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Sequence, Set, Tuple
@@ -262,10 +264,63 @@ def parse_pip_list_outdated_json(output: str) -> List[UpgradeCandidate]:
     return cands
 
 
-def get_upgrade_candidates_from_pip() -> List[UpgradeCandidate]:
-    """Get outdated packages directly from pip (no pip-review dependency)."""
-    cmd = [sys.executable, "-m", "pip", "list", "--outdated", "--format=json"]
-    rc, out, err = run_capture(cmd, env=_base_env())
+def _show_progress_bar(total_packages: int, stop_event: threading.Event) -> None:
+    """Animate a tqdm-style progress bar while checking for outdated packages."""
+    start_time = time.time()
+    # Estimate ~0.1s per package for the check, minimum 3 seconds
+    estimated_seconds = max(total_packages * 0.1, 3)
+    bar_width = 30
+    
+    while not stop_event.is_set():
+        elapsed = time.time() - start_time
+        # Calculate percentage based on elapsed vs estimated time
+        pct = min(100, int((elapsed / estimated_seconds) * 100))
+        
+        # Build progress bar with smooth fill
+        filled = int(bar_width * pct / 100)
+        bar = "█" * filled + "░" * (bar_width - filled)
+        
+        # Show progress
+        print(f"\rChecking {total_packages} packages [{bar}] {pct}%", end="", flush=True)
+        time.sleep(0.05)  # Update 20 times per second for smooth animation
+    
+    # Fill to 100% when done
+    bar = "█" * bar_width
+    print(f"\rChecking {total_packages} packages [{bar}] 100%", end="", flush=True)
+    time.sleep(0.1)
+    # Clear the line when done
+    print("\r" + " " * 80 + "\r", end="")
+
+
+def get_upgrade_candidates_from_pip(total_packages: int) -> List[UpgradeCandidate]:
+    """Get outdated packages directly from pip with progress bar."""
+    stop_event = threading.Event()
+    result_container = {}
+    
+    def run_pip():
+        """Run pip command in background thread."""
+        cmd = [sys.executable, "-m", "pip", "list", "--outdated", "--format=json"]
+        rc, out, err = run_capture(cmd, env=_base_env())
+        result_container['rc'] = rc
+        result_container['out'] = out
+        result_container['err'] = err
+        stop_event.set()  # Signal that pip is done
+    
+    # Start pip command in background thread
+    pip_thread = threading.Thread(target=run_pip)
+    pip_thread.start()
+    
+    # Show progress bar while waiting
+    _show_progress_bar(total_packages, stop_event)
+    
+    # Wait for pip thread to complete
+    pip_thread.join()
+    
+    # Check results
+    rc = result_container.get('rc', 1)
+    out = result_container.get('out', '')
+    err = result_container.get('err', '')
+    
     if rc != 0:
         msg = (err or "").strip()
         if msg:
@@ -460,7 +515,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         print(f"Conda environment detected at: {conda_prefix}")
     print(f"Detected {pip_count} pip-installed packages (excluded {excluded_conda} conda-installed).")
 
-    all_cands = get_upgrade_candidates_from_pip()
+    all_cands = get_upgrade_candidates_from_pip(pip_count)
 
     # Filter to pip-installed (exclude conda-installed)
     cands = [c for c in all_cands if norm_name(c.name) in pip_names]
