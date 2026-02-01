@@ -2,24 +2,6 @@
 
 An interactive, user-friendly tool for upgrading pip-installed packages while smartly excluding conda-installed ones. No more accidental upgrades of your carefully managed conda packages!
 
-## Features
-
-- **Smart Conda Detection**: Automatically detects and excludes packages installed via conda
-- **Visual Progress Bar**: See exactly what's happening with a tqdm-style progress indicator
-- **Interactive Selection**: Multi-select menu with spacebar toggle (vim-style keybindings included!)
-- **Curses UI**: Beautiful terminal interface with keyboard navigation
-- **Text Fallback**: Works even without curses support
-- **Safe Dry-Run**: Preview upgrades before committing
-- **Zero Dependencies**: Uses only Python standard library
-- **User Mode Support**: Install to user site-packages when you don't have admin rights
-
-## Requirements
-
-- **Python**: 3.8 or higher
-- **OS**: Linux or macOS (uses curses for the interactive UI)
-- **pip**: Any recent version
-- **Conda**: Optional (tool works great with or without it!)
-
 ## Installation
 
 Simply download the script and make it executable:
@@ -119,6 +101,24 @@ When in the interactive curses mode:
 | `n` | Select none (clear all) |
 | `Enter` | Upgrade selected packages |
 | `q` | Quit without upgrading |
+
+## Features
+
+- **Smart Conda Detection**: Automatically detects and excludes packages installed via conda
+- **Visual Progress Bar**: See exactly what's happening with a tqdm-style progress indicator
+- **Interactive Selection**: Multi-select menu with spacebar toggle (vim-style keybindings included!)
+- **Curses UI**: Beautiful terminal interface with keyboard navigation
+- **Text Fallback**: Works even without curses support
+- **Safe Dry-Run**: Preview upgrades before committing
+- **Zero Dependencies**: Uses only Python standard library
+- **User Mode Support**: Install to user site-packages when you don't have admin rights
+
+## Requirements
+
+- **Python**: 3.8 or higher
+- **OS**: Linux or macOS (uses curses for the interactive UI)
+- **pip**: Any recent version
+- **Conda**: Optional (tool works great with or without it!)
 
 ## Command Line Options
 
