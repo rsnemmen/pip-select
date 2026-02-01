@@ -1,4 +1,4 @@
-# pip-select-upgrade
+# `pip-select`: Interactive command-line tool for upgrading pip-installed packages
 
 An interactive, user-friendly tool for upgrading pip-installed packages while smartly excluding conda-installed ones. No more accidental upgrades of your carefully managed conda packages!
 
@@ -52,6 +52,7 @@ python pip_select_upgrade.py --dry-run --no-curses
 ```
 
 **Output:**
+
 ```
 Conda environment detected at: /home/user/miniconda3/envs/myenv
 Detected 84 pip-installed packages (excluded 141 conda-installed).
@@ -73,10 +74,11 @@ Enter numbers to upgrade (e.g. 1 3 4), or blank to cancel:
 Launch the beautiful interactive menu:
 
 ```bash
-python pip_select_upgrade.py
+./pip_select_upgrade.py
 ```
 
 **Screenshot:**
+
 ```
 SPACE=toggle  ↑/↓/PgUp/PgDn=move  Home/End=jump  a=all  n=none  Enter=upg  q=quit  Selected: 3/84
 [ ] aiohttp                         3.13.2       -> 3.13.3      
