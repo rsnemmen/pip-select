@@ -26,19 +26,19 @@ Simply download the script and make it executable:
 
 ```bash
 # Download the script
-curl -O https://raw.githubusercontent.com/yourusername/pip-select-upgrade/main/pip_select_upgrade.py
+curl -O https://raw.githubusercontent.com/yourusername/pip-select-upgrade/main/pip-select.py
 
 # Make it executable
-chmod +x pip_select_upgrade.py
+chmod +x pip-select.py
 
 # Optional: Move to your PATH
-mv pip_select_upgrade.py ~/.local/bin/pip-select-upgrade
+mv pip-select.py ~/.local/bin/pip-select-upgrade
 ```
 
 Or run it directly without installing:
 
 ```bash
-python pip_select_upgrade.py
+python pip-select.py
 ```
 
 ## Usage
@@ -48,7 +48,7 @@ python pip_select_upgrade.py
 See what packages are available for upgrade without actually upgrading:
 
 ```bash
-python pip_select_upgrade.py --dry-run --no-curses
+python pip-select.py --dry-run --no-curses
 ```
 
 **Output:**
@@ -74,7 +74,7 @@ Enter numbers to upgrade (e.g. 1 3 4), or blank to cancel:
 Launch the beautiful interactive menu:
 
 ```bash
-./pip_select_upgrade.py
+./pip-select.py
 ```
 
 **Screenshot:**
@@ -98,7 +98,7 @@ Navigate with arrow keys, toggle with spacebar, and press Enter to upgrade selec
 If you don't have admin rights, use the `--user` flag:
 
 ```bash
-python pip_select_upgrade.py --user
+python pip-select.py --user
 ```
 
 This will install upgrades to your user site-packages directory.
@@ -123,7 +123,7 @@ When in the interactive curses mode:
 ## Command Line Options
 
 ```
-usage: pip_select_upgrade.py [-h] [--user] [--dry-run] [--no-curses] ...
+usage: pip-select.py [-h] [--user] [--dry-run] [--no-curses] ...
 
 Interactive upgrader for pip-installed packages (excluding conda-installed).
 
@@ -155,7 +155,7 @@ This dual approach ensures conda packages are reliably excluded from the upgrade
 Upgrade packages while respecting version constraints:
 
 ```bash
-python pip_select_upgrade.py -- --constraint constraints.txt
+python pip-select.py -- --constraint constraints.txt
 ```
 
 ### Upgrade Specific Index
@@ -163,7 +163,7 @@ python pip_select_upgrade.py -- --constraint constraints.txt
 Use a different package index:
 
 ```bash
-python pip_select_upgrade.py -- --index-url https://pypi.example.com/simple
+python pip-select.py -- --index-url https://pypi.example.com/simple
 ```
 
 ### Combining Options
@@ -171,7 +171,7 @@ python pip_select_upgrade.py -- --index-url https://pypi.example.com/simple
 Dry-run in user mode with custom index:
 
 ```bash
-python pip_select_upgrade.py --dry-run --user -- --index-url https://pypi.org/simple
+python pip-select.py --dry-run --user -- --index-url https://pypi.org/simple
 ```
 
 ### Help Menu
@@ -179,7 +179,7 @@ python pip_select_upgrade.py --dry-run --user -- --index-url https://pypi.org/si
 View all available options:
 
 ```bash
-python pip_select_upgrade.py --help
+python pip-select.py --help
 ```
 
 ## Tips & Notes

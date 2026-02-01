@@ -1,10 +1,10 @@
-# Agent Instructions for pip_select_upgrade
+# Agent Instructions for pip-select
 
 This is a single-file Python CLI tool for interactively upgrading pip packages while excluding conda-installed packages.
 
 ## Project Structure
 
-- `pip_select_upgrade.py` - Main CLI script (548 lines, dependency-free)
+- `pip-select.py` - Main CLI script (548 lines, dependency-free)
 - No external dependencies (uses only Python standard library)
 - Supports Python 3.8+
 - Linux/macOS only (uses curses)
@@ -14,25 +14,25 @@ This is a single-file Python CLI tool for interactively upgrading pip packages w
 ### Linting
 ```bash
 # Run ruff for linting
-ruff check pip_select_upgrade.py
+ruff check pip-select.py
 
 # Run ruff with auto-fix
-ruff check --fix pip_select_upgrade.py
+ruff check --fix pip-select.py
 ```
 
 ### Formatting
 ```bash
 # Format with black
-black pip_select_upgrade.py
+black pip-select.py
 
 # Check formatting without changes
-black --check pip_select_upgrade.py
+black --check pip-select.py
 ```
 
 ### Type Checking
 ```bash
 # Run mypy for type checking
-mypy pip_select_upgrade.py
+mypy pip-select.py
 ```
 
 ### Testing
@@ -41,22 +41,22 @@ mypy pip_select_upgrade.py
 pytest
 
 # Run specific test file
-pytest test_pip_select_upgrade.py
+pytest test_pip-select.py
 
 # Run single test function
-pytest test_pip_select_upgrade.py::test_function_name
+pytest test_pip-select.py::test_function_name
 
 # Run with verbose output
-pytest -xvs test_pip_select_upgrade.py::test_function_name
+pytest -xvs test_pip-select.py::test_function_name
 ```
 
 ### Running the Script
 ```bash
 # Dry run mode (no actual upgrades)
-python pip_select_upgrade.py --dry-run --no-curses
+python pip-select.py --dry-run --no-curses
 
 # Help
-python pip_select_upgrade.py --help
+python pip-select.py --help
 ```
 
 ## Code Style Guidelines
@@ -213,11 +213,11 @@ def test_parse_pip_list_json():
 ## Pre-commit Checklist
 
 Before committing changes:
-1. Run `ruff check pip_select_upgrade.py`
-2. Run `black --check pip_select_upgrade.py`
-3. Run `mypy pip_select_upgrade.py` (if type checker is configured)
-4. Run `python -m py_compile pip_select_upgrade.py` for syntax check
-5. Test the script: `python pip_select_upgrade.py --dry-run --no-curses`
+1. Run `ruff check pip-select.py`
+2. Run `black --check pip-select.py`
+3. Run `mypy pip-select.py` (if type checker is configured)
+4. Run `python -m py_compile pip-select.py` for syntax check
+5. Test the script: `python pip-select.py --dry-run --no-curses`
 6. Ensure docstrings are updated for modified functions
 
 ## Notes for Agents
