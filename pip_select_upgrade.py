@@ -309,7 +309,7 @@ def curses_select(cands: List[UpgradeCandidate]) -> Optional[List[UpgradeCandida
 
             # Header
             chosen = sum(1 for x in selected if x)
-            header = "SPACE=toggle  ↑/↓=move  a=all  n=none  ENTER=upgrade  q=quit"
+            header = "SPACE=toggle  ↑/↓/PgUp/PgDn=move  Home/End=jump  a=all  n=none  Enter=upg  q=quit"
             status = f"Selected: {chosen}/{len(cands)}"
             stdscr.addnstr(0, 0, header, w - 1)
             stdscr.addnstr(0, max(0, w - 1 - len(status)), status, w - 1)
@@ -338,6 +338,18 @@ def curses_select(cands: List[UpgradeCandidate]) -> Optional[List[UpgradeCandida
                 pos = clamp(pos - 1, 0, len(cands) - 1)
             elif ch in (curses.KEY_DOWN, ord("j"), ord("J")):
                 pos = clamp(pos + 1, 0, len(cands) - 1)
+            elif ch == curses.KEY_PPAGE:
+                # PageUp: move up by one screen
+                pos = max(0, pos - body_h)
+            elif ch == curses.KEY_NPAGE:
+                # PageDown: move down by one screen
+                pos = min(len(cands) - 1, pos + body_h)
+            elif ch in (curses.KEY_HOME, ord("g")):
+                # Home: jump to first item (g as vim-style alias)
+                pos = 0
+            elif ch == curses.KEY_END:
+                # End: jump to last item
+                pos = len(cands) - 1
             elif ch == ord(" "):
                 selected[pos] = not selected[pos]
             elif ch in (ord("a"), ord("A")):
