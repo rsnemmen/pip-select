@@ -8,13 +8,10 @@ Simply download the script and make it executable:
 
 ```bash
 # Download the script
-curl -O https://raw.githubusercontent.com/yourusername/pip-select-upgrade/main/pip-select.py
+curl -O https://raw.githubusercontent.com/rsnemmen/pip-select/main/pip-select.py
 
 # Make it executable
 chmod +x pip-select.py
-
-# Optional: Move to your PATH
-mv pip-select.py ~/.local/bin/pip-select-upgrade
 ```
 
 Or run it directly without installing:
