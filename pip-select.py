@@ -27,7 +27,7 @@ import threading
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Sequence, Set, Tuple
+from typing import Any, Dict, Iterable, List, Optional, Sequence, Set, Tuple
 
 try:
     # Python 3.8+
@@ -126,7 +126,7 @@ def conda_meta_names(conda_prefix: Path) -> Set[str]:
             n = data.get("name")
             if isinstance(n, str) and n.strip():
                 names.add(norm_name(n))
-        except Exception:
+        except (OSError, ValueError, json.JSONDecodeError):
             continue
     return names
 
@@ -142,11 +142,11 @@ class InstalledDist:
     installer: str     # "pip", "conda", "", etc.
 
 
-def read_installer(dist) -> str:
+def read_installer(dist: Any) -> str:
     try:
         txt = dist.read_text("INSTALLER")
         return (txt or "").strip().lower()
-    except Exception:
+    except (OSError, AttributeError):
         return ""
 
 
@@ -167,7 +167,7 @@ def list_installed_distributions() -> List[InstalledDist]:
                     installer=read_installer(dist),
                 )
             )
-        except Exception:
+        except (AttributeError, TypeError, ValueError):
             continue
     return out
 
@@ -323,8 +323,12 @@ def get_upgrade_candidates_from_pip(total_packages: int) -> List[UpgradeCandidat
     
     if rc != 0:
         msg = (err or "").strip()
+        print(
+            f"Error: `pip list --outdated` failed (exit code {rc}).",
+            file=sys.stderr,
+        )
         if msg:
-            print(msg)
+            print(msg, file=sys.stderr)
         raise SystemExit(rc)
 
     cands = parse_pip_list_outdated_json(out)
@@ -336,6 +340,9 @@ def get_upgrade_candidates_from_pip(total_packages: int) -> List[UpgradeCandidat
 # ----------------------------
 
 def curses_select(cands: List[UpgradeCandidate]) -> Optional[List[UpgradeCandidate]]:
+    if not cands:
+        return []
+
     selected = [False] * len(cands)
     pos = 0
     top = 0
@@ -343,7 +350,7 @@ def curses_select(cands: List[UpgradeCandidate]) -> Optional[List[UpgradeCandida
     def clamp(n: int, lo: int, hi: int) -> int:
         return max(lo, min(hi, n))
 
-    def _ui(stdscr) -> Optional[List[UpgradeCandidate]]:
+    def _ui(stdscr: curses.window) -> Optional[List[UpgradeCandidate]]:
         nonlocal pos, top, selected
 
         curses.curs_set(0)
@@ -415,7 +422,13 @@ def curses_select(cands: List[UpgradeCandidate]) -> Optional[List[UpgradeCandida
                 chosen_items = [cands[i] for i, ok in enumerate(selected) if ok]
                 return chosen_items
 
-    return curses.wrapper(_ui)
+    try:
+        return curses.wrapper(_ui)
+    except KeyboardInterrupt:
+        return None
+    except Exception:
+        print("\nCurses UI failed; falling back to text selection.", file=sys.stderr)
+        return fallback_select(cands)
 
 
 def fallback_select(cands: List[UpgradeCandidate]) -> Optional[List[UpgradeCandidate]]:
@@ -423,16 +436,26 @@ def fallback_select(cands: List[UpgradeCandidate]) -> Optional[List[UpgradeCandi
     for i, c in enumerate(cands, start=1):
         print(f"  {i:>3}. {c.name:30} {c.current:12} -> {c.latest:12}")
 
-    s = input("\nEnter numbers to upgrade (e.g. 1 3 4), or blank to cancel: ").strip()
-    if not s:
-        return None
+    while True:
+        try:
+            s = input("\nEnter numbers to upgrade (e.g. 1 3 4), or blank to cancel: ").strip()
+        except EOFError:
+            return None
 
-    picks: Set[int] = set()
-    for tok in s.replace(",", " ").split():
-        if tok.isdigit():
-            picks.add(int(tok))
-    chosen = [cands[i - 1] for i in sorted(picks) if 1 <= i <= len(cands)]
-    return chosen
+        if not s:
+            return None
+
+        picks: Set[int] = set()
+        for tok in s.replace(",", " ").split():
+            if tok.isdigit():
+                picks.add(int(tok))
+
+        chosen = [cands[i - 1] for i in sorted(picks) if 1 <= i <= len(cands)]
+        if not chosen:
+            print(f"  No valid numbers (valid range: 1–{len(cands)}). Try again, or press Enter to cancel.")
+            continue
+
+        return chosen
 
 
 # ----------------------------
@@ -467,7 +490,11 @@ def upgrade_selected(
         print("Cancelled.")
         return 2
 
-    return run_stream(cmd, env=_base_env())
+    try:
+        return run_stream(cmd, env=_base_env())
+    except KeyboardInterrupt:
+        print("\nUpgrade interrupted.", file=sys.stderr)
+        return 1
 
 
 # ----------------------------
@@ -496,7 +523,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     ap.add_argument(
         "pip_args",
         nargs=argparse.REMAINDER,
-        help="Extra args passed to pip install (use '--' before them), e.g. -- --constraint constraints.txt",
+        help="Extra args forwarded to pip install. Use '--' as a separator for clarity, e.g. -- --constraint constraints.txt",
     )
 
     args = ap.parse_args(argv)

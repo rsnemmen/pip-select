@@ -1,230 +1,201 @@
 # Agent Instructions for pip-select
 
-This is a single-file Python CLI tool for interactively upgrading pip packages while excluding conda-installed packages.
+This repository is a small, single-file Python CLI for interactively upgrading
+pip-installed packages while excluding conda-installed ones.
 
-## Project Structure
+The instructions below should match the repository as it exists today, not an
+idealized future state.
 
-- `pip-select.py` - Main CLI script (548 lines, dependency-free)
-- No external dependencies (uses only Python standard library)
-- Supports Python 3.8+
-- Linux/macOS only (uses curses)
+## Current Repository Layout
 
-## Build/Lint/Test Commands
+- `pip-select.py` - the entire application
+- `README.md` - user-facing documentation
+- `AGENTS.md` - contributor/agent guidance
 
-### Linting
+There is currently no committed test suite, no `pyproject.toml`, and no
+packaging/module layout beyond the standalone script. Generated artifacts such
+as `__pycache__/` or `.DS_Store` are not part of the source tree and should not
+be treated as code.
+
+## What the Script Does Today
+
+The current script:
+
+- detects whether it is running inside a conda environment
+- excludes conda-installed packages using two signals:
+  - `INSTALLER` metadata
+  - `conda-meta/*.json`
+- calls `python -m pip list --outdated --format=json`
+- parses outdated package data into `UpgradeCandidate` records
+- presents either:
+  - a curses multi-select UI, or
+  - a text fallback selector
+- upgrades the selected packages with `python -m pip install --upgrade`
+
+## Current CLI Contract
+
+Preserve these behaviors unless the user explicitly asks to change them:
+
+- Supported flags:
+  - `--user`
+  - `--dry-run`
+  - `--no-curses`
+- Extra pip arguments are passed through after `--`
+- The script uses `sys.executable -m pip`, not a hardcoded `pip` binary
+- `--user` inside a virtual environment returns exit code `2`
+- Cancelling selection returns exit code `2`
+- No upgradeable packages returns exit code `0`
+- Unknown/non-conda installers are currently treated as pip-like by default
+- The progress bar is time-based animation, not true pip progress reporting
+
+## Safe Validation Commands
+
+Use commands that work with the repository's current structure.
+
+### Always Safe
+
 ```bash
-# Run ruff for linting
+python3 -m py_compile pip-select.py
+python3 pip-select.py --help
+```
+
+### Safe Behavior Smoke Test
+
+```bash
+python3 pip-select.py --dry-run --no-curses
+```
+
+Notes:
+
+- `--dry-run` avoids installs, but the command still inspects the environment
+  and queries pip for outdated packages
+- this may hit the network, depending on local pip behavior and package index
+  access
+
+### Optional Local Tooling
+
+These commands are useful if the tools are installed locally, but the
+repository does not currently commit configuration for them:
+
+```bash
 ruff check pip-select.py
-
-# Run ruff with auto-fix
-ruff check --fix pip-select.py
-```
-
-### Formatting
-```bash
-# Format with black
-black pip-select.py
-
-# Check formatting without changes
 black --check pip-select.py
-```
-
-### Type Checking
-```bash
-# Run mypy for type checking
 mypy pip-select.py
 ```
 
-### Testing
-```bash
-# Run all tests
-pytest
+Do not assume these tools are available in every environment.
 
-# Run specific test file
-pytest test_pip-select.py
+## Code Map
 
-# Run single test function
-pytest test_pip-select.py::test_function_name
+### Helpers and Normalization
 
-# Run with verbose output
-pytest -xvs test_pip-select.py::test_function_name
-```
+- `norm_name()`
+- `run_capture()`
+- `run_stream()`
+- `ask_yes_no()`
+- `is_tty()`
+- `in_venv()`
 
-### Running the Script
-```bash
-# Dry run mode (no actual upgrades)
-python pip-select.py --dry-run --no-curses
+### Conda Detection and Package Classification
 
-# Help
-python pip-select.py --help
-```
+- `detect_conda_prefix()`
+- `conda_meta_names()`
+- `read_installer()`
+- `list_installed_distributions()`
+- `pip_installed_set_excluding_conda()`
 
-## Code Style Guidelines
+### Upgrade Discovery
 
-### General Style
-- Follow PEP 8 conventions
-- Use `black` for formatting (88 character line length)
-- Use type hints for all function signatures
-- Add docstrings for all public functions and classes
+- `parse_pip_list_outdated_json()`
+- `_show_progress_bar()`
+- `get_upgrade_candidates_from_pip()`
 
-### Imports
-- Group imports in this order:
-  1. Standard library imports (alphabetical)
-  2. Third-party imports (alphabetical)  
-  3. Local imports (alphabetical)
-- Use `from __future__ import annotations` for Python 3.8+ type hint compatibility
-- Use conditional imports for optional dependencies with try/except
+### Selection UI
 
-Example:
-```python
-from __future__ import annotations
+- `curses_select()`
+- `fallback_select()`
 
-import argparse
-import json
-import sys
-from dataclasses import dataclass
-from typing import Optional
+### Upgrade Execution and CLI Entry Point
 
-try:
-    from importlib import metadata as importlib_metadata
-except Exception:
-    import importlib_metadata  # type: ignore
-```
+- `upgrade_selected()`
+- `main()`
 
-### Naming Conventions
-- Functions: `snake_case` (e.g., `get_upgrade_candidates()`)
-- Classes: `PascalCase` (e.g., `UpgradeCandidate`)
-- Constants: `UPPER_SNAKE_CASE` (e.g., `_NAME_NORM_RE`)
-- Private functions: `_leading_underscore` (e.g., `_show_progress_bar()`)
-- Type variables: Use `TypeVar` with descriptive names
+## Editing Guidelines
 
-### Type Hints
-- Use Python 3.8+ style with `from __future__ import annotations`
-- Annotate all function parameters and return types
-- Use `Optional[Type]` for nullable values
-- Use `List[Type]`, `Dict[KeyType, ValueType]` from typing module
-- Use `Sequence` for read-only collections, `List` for mutable
+### Preserve the Project Shape
 
-Example:
-```python
-def parse_packages(data: str) -> List[UpgradeCandidate]:
-    """Parse package data and return candidates."""
-    result: List[UpgradeCandidate] = []
-    return result
-```
+- Keep the tool dependency-free
+- Keep the single-file application structure unless explicitly asked to split it
+- Maintain Python 3.8+ compatibility
+- Maintain Linux/macOS assumptions for curses behavior
 
-### Error Handling
-- Use specific exceptions when possible
-- Handle errors gracefully with try/except blocks
-- Print user-friendly error messages to stderr
-- Use `raise SystemExit(code)` for fatal errors with appropriate exit codes:
-  - 0: Success
-  - 1: General error
-  - 2: User cancellation or usage error
+### Match Existing Code Style
 
-Example:
-```python
-try:
-    data = json.loads(output)
-except json.JSONDecodeError as e:
-    print(f"Error parsing JSON: {e}", file=sys.stderr)
-    raise SystemExit(1)
-```
+Follow the patterns already used in `pip-select.py`:
 
-### Documentation
-- Use triple-quoted docstrings for all modules, classes, and functions
-- Follow Google-style docstrings:
-```python
-def function_name(param: str) -> int:
-    """Short description.
-    
-    Longer description if needed.
-    
-    Args:
-        param: Description of parameter
-        
-    Returns:
-        Description of return value
-        
-    Raises:
-        SystemExit: When error occurs
-    """
-```
+- `from __future__ import annotations`
+- standard-library-only imports
+- type hints using `Optional`, `List`, `Dict`, `Set`, `Tuple`, `Sequence`
+- `@dataclass(frozen=True)` for simple records
+- double-quoted strings
+- section comments in this form:
 
-### Code Organization
-- Use section comments with consistent formatting:
 ```python
 # ----------------------------
 # Section Name
 # ----------------------------
 ```
-- Group related functions together
-- Keep functions focused and single-purpose
-- Maximum function length: ~50 lines
-- Use dataclasses for data containers
 
-### String Formatting
-- Use f-strings for all string formatting
-- Use double quotes for strings consistently
-- Use raw strings (r"") for regex patterns
+Do not introduce unrelated style churn while editing a small feature or fix.
 
-Example:
-```python
-line = f"{mark} {c.name}  {c.current} -> {c.latest}"
-pattern = re.compile(r"[-_.]+")
-```
+### Subprocess and Environment Rules
 
-### Subprocess Handling
-- Always use `subprocess.run()` with proper error handling
-- Capture stdout/stderr when needed
-- Use `text=True` for string output
-- Check return codes and handle failures
+- Prefer `subprocess.run()` wrappers already present in the file
+- Reuse `_base_env()` for pip-related subprocesses
+- Preserve `sys.executable -m pip`
+- Surface subprocess failures clearly; do not silently swallow them
 
-Example:
-```python
-result = subprocess.run(
-    cmd,
-    stdout=subprocess.PIPE,
-    stderr=subprocess.PIPE,
-    text=True,
-    check=False
-)
-if result.returncode != 0:
-    handle_error(result.stderr)
-```
+### UI and UX Rules
 
-### Testing Guidelines
-- Write tests using pytest
-- Use descriptive test function names: `test_what_is_being_tested()`
-- Use fixtures for common setup
-- Mock external dependencies (subprocess calls)
-- Test both success and error cases
+- Keep both the curses UI and text fallback working
+- Preserve TTY-aware behavior
+- Treat blank fallback input as cancel
+- Avoid adding dependencies for richer UI
 
-Example:
-```python
-def test_parse_pip_list_json():
-    """Test parsing pip list JSON output."""
-    json_data = '[{"name": "pkg", "version": "1.0", "latest_version": "2.0"}]'
-    result = parse_pip_list_outdated_json(json_data)
-    assert len(result) == 1
-    assert result[0].name == "pkg"
-```
+## Testing and Change Strategy
 
-## Pre-commit Checklist
+Because there is no committed automated test suite right now:
 
-Before committing changes:
-1. Run `ruff check pip-select.py`
-2. Run `black --check pip-select.py`
-3. Run `mypy pip-select.py` (if type checker is configured)
-4. Run `python -m py_compile pip-select.py` for syntax check
-5. Test the script: `python pip-select.py --dry-run --no-curses`
-6. Ensure docstrings are updated for modified functions
+- make focused, surgical changes
+- validate syntax after code edits
+- run `--help` after CLI changes
+- run `--dry-run --no-curses` for behavior changes when safe
+- manually reason through exit codes and selection flow when touching control
+  flow
 
-## Notes for Agents
+If you add tests in the future, do not assume a normal import path from the
+script name alone; `pip-select.py` contains a hyphen, so direct module imports
+need care. Subprocess-based tests or explicit file-based import helpers are
+safer than assuming `import pip-select` works.
 
-- This is a CLI tool - maintain backward compatibility for command-line interface
-- No external dependencies allowed (standard library only)
-- Preserve the dependency-free nature of the script
-- Linux/macOS only - curses is not available on Windows
-- Always test with `--dry-run` flag to avoid accidental package upgrades
-- Keep the single-file structure - don't split into modules
+## Documentation Expectations
+
+Update `README.md` when user-visible behavior changes, especially for:
+
+- command-line flags
+- selection behavior
+- conda filtering behavior
+- examples and troubleshooting text
+
+Update `AGENTS.md` when the repository structure or recommended validation flow
+changes.
+
+## Practical Reminders for Agents
+
+- Favor backward-compatible CLI changes
+- Do not add external runtime dependencies
+- Do not convert this into a package/module layout unless asked
+- Be careful with behavior changes around conda detection and installer
+  classification
+- Prefer small helpers over large refactors
+- Clean up temporary files you create during your work
