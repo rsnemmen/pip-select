@@ -4,21 +4,11 @@ An interactive, user-friendly tool for upgrading pip-installed packages while sm
 
 ## Installation
 
-Simply download the script and make it executable:
-
 ```bash
-# Download the script
-curl -O https://raw.githubusercontent.com/rsnemmen/pip-select/main/pip-select.py
-
-# Make it executable
-chmod +x pip-select.py
+curl -fsSL https://raw.githubusercontent.com/rsnemmen/pip-select/main/install.sh | sh
 ```
 
-Or run it directly without installing:
-
-```bash
-python pip-select.py
-```
+This downloads `pip-select.py` and creates a `pip-select` command in `~/.local/bin` (or `/usr/local/bin` if needed).
 
 ## Usage
 
