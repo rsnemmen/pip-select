@@ -40,6 +40,7 @@ Preserve these behaviors unless the user explicitly asks to change them:
   - `--user`
   - `--dry-run`
   - `--no-curses`
+  - `--sort {name,severity}`
 - Extra pip arguments are passed through after `--`
 - The script uses `sys.executable -m pip`, not a hardcoded `pip` binary
 - `--user` inside a virtual environment returns exit code `2`
@@ -106,6 +107,7 @@ Do not assume these tools are available in every environment.
 
 ### Upgrade Discovery
 
+- `classify_bump()` — classifies a version delta as `"major"`, `"minor"`, `"patch"`, or `"other"`; result stored on `UpgradeCandidate.bump`
 - `parse_pip_list_outdated_json()`
 - `_show_progress_bar()`
 - `get_upgrade_candidates_from_pip()`
