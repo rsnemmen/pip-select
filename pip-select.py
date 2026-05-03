@@ -216,12 +216,36 @@ def pip_installed_set_excluding_conda() -> Tuple[Set[str], int, int, Optional[Pa
 # pip-review integration
 # ----------------------------
 
+_SEVERITY_ORDER: Dict[str, int] = {"major": 0, "minor": 1, "patch": 2, "other": 3}
+_FALLBACK_TAG: Dict[str, str] = {"major": "[MAJ]", "minor": "[min]", "patch": "[pat]", "other": "[ ? ]"}
+_VERSION_RE = re.compile(r"^(\d+)(?:\.(\d+))?(?:\.(\d+))?")
+
+
+def classify_bump(current: str, latest: str) -> str:
+    """Return 'major', 'minor', 'patch', or 'other' based on first differing version component."""
+    mc = _VERSION_RE.match(current)
+    ml = _VERSION_RE.match(latest)
+    if not mc or not ml:
+        return "other"
+    cur = tuple(int(g or 0) for g in mc.groups())
+    lat = tuple(int(g or 0) for g in ml.groups())
+    if lat < cur:
+        return "other"
+    if lat[0] != cur[0]:
+        return "major"
+    if lat[1] != cur[1]:
+        return "minor"
+    if lat[2] != cur[2]:
+        return "patch"
+    return "other"
+
+
 @dataclass(frozen=True)
 class UpgradeCandidate:
     name: str
     current: str
     latest: str
-    dist_type: str = ""
+    bump: str = "other"
 
 
 def _base_env() -> Dict[str, str]:
@@ -252,11 +276,12 @@ def parse_pip_list_outdated_json(output: str) -> List[UpgradeCandidate]:
             current = item.get("version")
             latest = item.get("latest_version")
             if name and current and latest:
+                cur_s, lat_s = str(current), str(latest)
                 cands.append(UpgradeCandidate(
                     name=str(name),
-                    current=str(current),
-                    latest=str(latest),
-                    dist_type=""
+                    current=cur_s,
+                    latest=lat_s,
+                    bump=classify_bump(cur_s, lat_s),
                 ))
     except json.JSONDecodeError:
         pass
@@ -355,6 +380,13 @@ def curses_select(cands: List[UpgradeCandidate]) -> Optional[List[UpgradeCandida
 
         curses.curs_set(0)
         stdscr.keypad(True)
+        use_colors = curses.has_colors()
+        if use_colors:
+            curses.start_color()
+            curses.use_default_colors()
+            curses.init_pair(1, curses.COLOR_RED, -1)
+            curses.init_pair(2, curses.COLOR_YELLOW, -1)
+            curses.init_pair(3, curses.COLOR_GREEN, -1)
 
         while True:
             stdscr.erase()
@@ -383,11 +415,19 @@ def curses_select(cands: List[UpgradeCandidate]) -> Optional[List[UpgradeCandida
                     break
                 c = cands[idx]
                 mark = "[x]" if selected[idx] else "[ ]"
-                line = f"{mark} {c.name}  {c.current} -> {c.latest}"
+                prefix = f"{mark} {c.name}  "
+                version_part = f"{c.current} -> {c.latest}"
+                line = prefix + version_part
                 if idx == pos:
                     stdscr.attron(curses.A_REVERSE)
                     stdscr.addnstr(1 + row, 0, line, w - 1)
                     stdscr.attroff(curses.A_REVERSE)
+                elif use_colors and c.bump in ("major", "minor", "patch"):
+                    pair_num = {"major": 1, "minor": 2, "patch": 3}[c.bump]
+                    stdscr.addnstr(1 + row, 0, prefix, w - 1)
+                    col = min(len(prefix), w - 2)
+                    if w - 1 - col > 0:
+                        stdscr.addnstr(1 + row, col, version_part, w - 1 - col, curses.color_pair(pair_num))
                 else:
                     stdscr.addnstr(1 + row, 0, line, w - 1)
 
@@ -434,7 +474,8 @@ def curses_select(cands: List[UpgradeCandidate]) -> Optional[List[UpgradeCandida
 def fallback_select(cands: List[UpgradeCandidate]) -> Optional[List[UpgradeCandidate]]:
     print("\nUpgradeable packages:")
     for i, c in enumerate(cands, start=1):
-        print(f"  {i:>3}. {c.name:30} {c.current:12} -> {c.latest:12}")
+        tag = _FALLBACK_TAG.get(c.bump, "[ ? ]")
+        print(f"  {i:>3}. {tag} {c.name:30} {c.current:12} -> {c.latest:12}")
 
     while True:
         try:
@@ -521,6 +562,12 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         help="Disable curses UI (use text fallback selection).",
     )
     ap.add_argument(
+        "--sort",
+        choices=("name", "severity"),
+        default="name",
+        help="Sort order: 'name' (alphabetical, default) or 'severity' (major→minor→patch→other, then name).",
+    )
+    ap.add_argument(
         "pip_args",
         nargs=argparse.REMAINDER,
         help="Extra args forwarded to pip install. Use '--' as a separator for clarity, e.g. -- --constraint constraints.txt",
@@ -552,7 +599,10 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         return 0
 
     # Sort for stable menu
-    cands.sort(key=lambda c: norm_name(c.name))
+    if args.sort == "severity":
+        cands.sort(key=lambda c: (_SEVERITY_ORDER.get(c.bump, 3), norm_name(c.name)))
+    else:
+        cands.sort(key=lambda c: norm_name(c.name))
 
     if not args.no_curses and is_tty():
         chosen = curses_select(cands)

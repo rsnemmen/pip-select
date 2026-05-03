@@ -28,11 +28,11 @@ Detected 84 pip-installed packages (excluded 141 conda-installed).
 Checking 84 packages [████████████████████████████░░] 87%
 
 Upgradeable packages:
-    1. aiohttp                        3.13.2       -> 3.13.3      
-    2. beartype                       0.14.1       -> 0.22.9      
-    3. datasets                       4.4.2        -> 4.5.0       
-    4. dill                           0.4.0        -> 0.4.1       
-    5. numpy                          1.24.0       -> 2.0.0       
+    1. [pat] aiohttp                        3.13.2       -> 3.13.3      
+    2. [MAJ] beartype                       0.14.1       -> 0.22.9      
+    3. [min] datasets                       4.4.2        -> 4.5.0       
+    4. [pat] dill                           0.4.0        -> 0.4.1       
+    5. [MAJ] numpy                          1.24.0       -> 2.0.0       
     ...
 
 Enter numbers to upgrade (e.g. 1 3 4), or blank to cancel: 
@@ -94,8 +94,9 @@ When in the interactive curses mode:
 - **Smart Conda Detection**: Automatically detects and excludes packages installed via conda
 - **Visual Progress Bar**: See exactly what's happening with a tqdm-style progress indicator
 - **Interactive Selection**: Multi-select menu with spacebar toggle (vim-style keybindings included!)
-- **Curses UI**: Beautiful terminal interface with keyboard navigation
-- **Text Fallback**: Works even without curses support
+- **Curses UI**: Beautiful terminal interface with keyboard navigation; version deltas are color-coded (red=major, yellow=minor, green=patch) so you can spot risky upgrades at a glance
+- **Text Fallback**: Works even without curses support; bump tags `[MAJ]` / `[min]` / `[pat]` mark severity in the list
+- **Severity Sort**: `--sort severity` groups major bumps at the top so you can prioritize or skip them
 - **Safe Dry-Run**: Preview upgrades before committing
 - **Zero Dependencies**: Uses only Python standard library
 - **User Mode Support**: Install to user site-packages when you don't have admin rights
@@ -110,20 +111,23 @@ When in the interactive curses mode:
 ## Command Line Options
 
 ```
-usage: pip-select.py [-h] [--user] [--dry-run] [--no-curses] ...
+usage: pip-select.py [-h] [--user] [--dry-run] [--no-curses] [--sort {name,severity}] ...
 
 Interactive upgrader for pip-installed packages (excluding conda-installed).
 
 positional arguments:
-  pip_args     Extra args passed to pip install (use '--' before them), e.g.
-               -- --constraint constraints.txt
+  pip_args              Extra args passed to pip install (use '--' before them), e.g.
+                        -- --constraint constraints.txt
 
 options:
-  -h, --help   show this help message and exit
-  --user       Use 'pip install --user' (recommended if you don't have
-               permission to modify system site-packages).
-  --dry-run    Show what would be upgraded, but do not run pip install.
-  --no-curses  Disable curses UI (use text fallback selection).
+  -h, --help            show this help message and exit
+  --user                Use 'pip install --user' (recommended if you don't have
+                        permission to modify system site-packages).
+  --dry-run             Show what would be upgraded, but do not run pip install.
+  --no-curses           Disable curses UI (use text fallback selection).
+  --sort {name,severity}
+                        Sort order: 'name' (alphabetical, default) or 'severity'
+                        (major→minor→patch→other, then name).
 ```
 
 ## How It Works
