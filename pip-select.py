@@ -216,6 +216,7 @@ def pip_installed_set_excluding_conda() -> Tuple[Set[str], int, int, Optional[Pa
 # pip-review integration
 # ----------------------------
 
+_SPINNER_FRAMES = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"
 _SEVERITY_ORDER: Dict[str, int] = {"major": 0, "minor": 1, "patch": 2, "other": 3}
 _FALLBACK_TAG: Dict[str, str] = {"major": "[MAJ]", "minor": "[min]", "patch": "[pat]", "other": "[ ? ]"}
 _VERSION_RE = re.compile(r"^(\d+)(?:\.(\d+))?(?:\.(\d+))?")
@@ -290,31 +291,16 @@ def parse_pip_list_outdated_json(output: str) -> List[UpgradeCandidate]:
 
 
 def _show_progress_bar(total_packages: int, stop_event: threading.Event) -> None:
-    """Animate a tqdm-style progress bar while checking for outdated packages."""
+    """Animate a spinner with elapsed time while checking for outdated packages."""
     start_time = time.time()
-    # Estimate ~0.1s per package for the check, minimum 3 seconds
-    estimated_seconds = max(total_packages * 0.1, 3)
-    bar_width = 30
-    
+    i = 0
     while not stop_event.is_set():
-        elapsed = time.time() - start_time
-        # Calculate percentage based on elapsed vs estimated time
-        pct = min(100, int((elapsed / estimated_seconds) * 100))
-        
-        # Build progress bar with smooth fill
-        filled = int(bar_width * pct / 100)
-        bar = "█" * filled + "░" * (bar_width - filled)
-        
-        # Show progress
-        print(f"\rChecking {total_packages} packages [{bar}] {pct}%", end="", flush=True)
-        time.sleep(0.05)  # Update 20 times per second for smooth animation
-    
-    # Fill to 100% when done
-    bar = "█" * bar_width
-    print(f"\rChecking {total_packages} packages [{bar}] 100%", end="", flush=True)
-    time.sleep(0.1)
-    # Clear the line when done
-    print("\r" + " " * 80 + "\r", end="")
+        elapsed = int(time.time() - start_time)
+        frame = _SPINNER_FRAMES[i % len(_SPINNER_FRAMES)]
+        print(f"\rChecking {total_packages} packages... {frame} {elapsed}s", end="", flush=True)
+        i += 1
+        time.sleep(0.1)
+    print("\r" + " " * 80 + "\r", end="", flush=True)
 
 
 def get_upgrade_candidates_from_pip(total_packages: int) -> List[UpgradeCandidate]:
